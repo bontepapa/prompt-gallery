@@ -1,0 +1,6 @@
+.DS_Store
+*.pyc
+__pycache__/
+upload_progress.json
+new_success_records.json
+parsed_success_records.json

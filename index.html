@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nano Banana Prompt Gallery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="glass-header">
+        <div class="header-content">
+            <h1>Nano Banana <span>Gallery</span></h1>
+            <div class="filters" id="categoryFilter">
+                <button class="filter-btn active" data-filter="all">전체보기</button>
+            </div>
+            
+            <div class="toggle-success-only">
+                <label class="switch-label">
+                    <input type="checkbox" id="successOnlyToggle">
+                    <span class="label-text">✨ 성공작만</span>
+                </label>
+            </div>
+
+            <div class="theme-toggle">
+                <button id="themeToggleBtn" title="다크/라이트 모드 전환">🌓</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="gallery-container">
+        <!-- Loading Indicator -->
+        <div class="loader-container" id="loaderContainer">
+            <div class="loader"></div>
+            <p>클라우드에서 갤러리를 불러오는 중입니다...</p>
+        </div>
+        
+        <!-- Gallery Grid -->
+        <div class="masonry-grid" id="galleryGrid">
+            <!-- Items injected via JS -->
+        </div>
+    </main>
+
+    <!-- Floating Add Button -->
+    <button class="fab" id="openAddModalBtn" title="새 프롬프트 등록">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+    </button>
+
+    <!-- Detail Modal -->
+    <div class="modal" id="detailModal">
+        <div class="modal-overlay" id="detailOverlay"></div>
+        <div class="modal-content detail-layout" style="position: relative;">
+            <div class="detail-actions" id="detailActions" style="position: absolute; top: 1.2rem; right: 4rem; display: flex; gap: 0.5rem; z-index: 10;">
+                <button class="icon-btn" id="startEditBtn" title="수정하기" style="background:none; border:none; font-size:1.2rem; cursor:pointer; opacity:0.7;">✏️</button>
+                <button class="icon-btn" id="deletePostBtn" title="삭제하기" style="background:none; border:none; font-size:1.2rem; cursor:pointer; opacity:0.7;">🗑️</button>
+            </div>
+            <button class="close-btn" id="closeDetailBtn">&times;</button>
+            <div class="detail-image-box">
+                <img id="detailImage" src="" alt="Detail">
+            </div>
+            <div class="detail-info-box">
+                <!-- View Mode -->
+                <div id="detailViewMode">
+                    <span class="category-badge" id="detailCategory"></span>
+                    <h2 id="detailTitle" style="margin-top: 0.5rem; margin-bottom: 0.2rem; font-size: 1.5rem;"></h2>
+                    <p class="date" id="detailDate"></p>
+                    <div class="prompt-box">
+                        <h3>사용한 프롬프트</h3>
+                        <textarea id="detailPrompt" readonly></textarea>
+                        <button class="copy-btn" id="copyPromptBtn">
+                            <svg fill="none" stroke="currentColor" width="16" height="16" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            복사하기
+                        </button>
+                        <div id="copyFeedback" class="feedback-msg">복사되었습니다!</div>
+                    </div>
+
+                    <div class="thinking-box" id="detailThinkingBox">
+                        <h3>🧠 AI 사고과정</h3>
+                        <textarea id="detailThinking" readonly></textarea>
+                        <button class="copy-btn" id="copyThinkingBtn">
+                            <svg fill="none" stroke="currentColor" width="16" height="16" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            복사하기
+                        </button>
+                        <div id="copyThinkingFeedback" class="feedback-msg">복사되었습니다!</div>
+                    </div>
+
+                    <div class="analysis-box" id="detailAnalysisBox">
+                        <h3>📝 분석 메모</h3>
+                        <textarea id="detailAnalysis" readonly></textarea>
+                    </div>
+                </div>
+
+                <!-- Edit Mode Form -->
+                <form id="detailEditMode" class="hidden detail-edit-form" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+                    <h3 style="margin:0;">게시물 수정</h3>
+                    <div class="input-group">
+                        <label>판정</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="editStatusRadios" value="success" checked> 🟢 성공</label>
+                            <label><input type="radio" name="editStatusRadios" value="fail"> 🔴 실패</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>카테고리</label>
+                        <input type="text" id="editCategoryInput" required style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface); color: var(--text);">
+                    </div>
+                    <div class="input-group">
+                        <label>제목</label>
+                        <input type="text" id="editTitleInput" required style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface); color: var(--text);">
+                    </div>
+                    <div class="input-group">
+                        <label>상세 프롬프트</label>
+                        <textarea id="editPromptInput" rows="8" required style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface); color: var(--text); resize: vertical;"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>🧠 AI 사고과정 (선택)</label>
+                        <textarea id="editThinkingInput" rows="6" placeholder="AI가 이미지를 생성할 때 보여준 사고과정 원문을 붙여넣으세요..." style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface); color: var(--text); resize: vertical;"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>📝 분석 메모 (선택)</label>
+                        <textarea id="editAnalysisInput" rows="5" placeholder="성공 요인, 충돌 해결, 무시된 요소 등 분석 내용을 기록하세요..." style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface); color: var(--text); resize: vertical;"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" class="submit-btn" id="saveEditBtn" style="flex: 2;"><span id="editBtnText">수정 완료</span></button>
+                        <button type="button" class="filter-btn" id="cancelEditBtn" style="flex: 1; text-align: center;">취소</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Modal -->
+    <div class="modal" id="addModal">
+        <div class="modal-overlay" id="addOverlay"></div>
+        <div class="modal-content add-layout">
+            <button class="close-btn" id="closeAddBtn">&times;</button>
+            <h2>새 프롬프트 기록</h2>
+            <form id="addForm">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                    <div class="upload-prompt" id="uploadPrompt">
+                        <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <p>이미지를 클릭하거나 드래그 앤 드롭 하세요</p>
+                    </div>
+                    <img id="imagePreview" alt="Preview" class="hidden">
+                    <button type="button" id="removeImgBtn" class="remove-img-btn hidden">&times;</button>
+                </div>
+                
+                <div class="input-group">
+                    <label>카테고리 (단일 선택)</label>
+                    <div class="category-input-wrapper">
+                        <select id="categorySelect">
+                            <option value="퍼걸러" selected>퍼걸러</option>
+                            <option value="벤치">벤치</option>
+                            <option value="조합놀이대">조합놀이대</option>
+                            <option value="물놀이대">물놀이대</option>
+                            <option value="단위놀이대">단위놀이대</option>
+                            <option value="custom">직접 입력 (+)</option>
+                        </select>
+                        <input type="text" id="customCategoryInput" placeholder="새로운 카테고리 입력" class="hidden">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>제목 (어떤 이미지인지 짧게 설명)</label>
+                    <input type="text" id="titleInput" placeholder="예: 숲 속의 오두막 벤치" required>
+                </div>
+
+                <div class="input-group">
+                    <label>판정 (성공/실패)</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="statusRadios" value="success" checked> 🟢 성공 (성공적인 결과물)</label>
+                        <label><input type="radio" name="statusRadios" value="fail"> 🔴 실패 (오답/연구 기록)</label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>상세 프롬프트</label>
+                    <textarea id="promptInput" rows="6" placeholder="사용하신 상세 프롬프트를 붙여넣으세요..." required></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>🧠 AI 사고과정 <span style="opacity:0.5; font-size:0.8em;">(선택 · AI가 보여준 사고과정 원문 그대로 붙여넣기)</span></label>
+                    <textarea id="thinkingInput" rows="7" placeholder="예: Constructing the Scene\n  I'm currently working on setting the stage...\n\nDefining the Details\n  I've established the parameters..."></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>📝 분석 메모 <span style="opacity:0.5; font-size:0.8em;">(선택 · 성공/충돌/무시 요소 기록)</span></label>
+                    <textarea id="analysisInput" rows="5" placeholder="예:\n✅ 성공: 1/4000s + crisp droplets = 물보라 정지 성공\n⚡ 충돌: f/8 vs 전경블러 → AI가 드론뷰(구도)를 우선시\n❌ 무시: pastel tone 지시 → 상업사진 무드에 덮임"></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span id="btnText">클라우드에 저장하기</span>
+                    <div class="spinner hidden" id="submitSpinner"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">저장되었습니다!</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
