@@ -117,10 +117,6 @@ function renderGallery() {
                 <span class="status-badge ${isFail ? 'fail' : 'success'}"></span>
                 ${item.thinking ? `<span class="has-thinking-badge">🧠 AI분석</span>` : ''}
                 <img src="${imgUrl}" alt="${item.category}" class="item-img" loading="lazy" referrerpolicy="no-referrer">
-                <div class="item-info">
-                    <h3 class="item-title">${escapeHtml(item.title || "")}</h3>
-                    <p class="item-prompt-snippet">${escapeHtml(item.prompt)}</p>
-                </div>
             </div>
         `;
 
